@@ -57,10 +57,16 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
 
     chessBoard.applyMove(move);
 
+    // Refresh the screen before promoting
+    setState(() {
+      
+    });
+
     //Check if can promote
     if (chessBoard.needToPromote(playingColor) != null) {
       await showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (context) => PromoteWiget(
           sideColor: playingColor,
           promoteCallback: (piece) {
