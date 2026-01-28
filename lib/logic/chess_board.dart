@@ -24,13 +24,13 @@ class ChessBoard {
   }
 
   ChessBoard copy() {
-    return ChessBoard._(tiles: _tiles, history: _history);
+    return ChessBoard._(tiles: tiles, history: history);
   }
 
   ChessBoard copyWithMove(ChessMove move) {
     final newBoard = copy();
 
-    move.applyMove(newBoard);
+    move.applyToBoard(newBoard);
 
     //Update History
     newBoard._history.add(
@@ -88,29 +88,31 @@ class ChessBoard {
     return true;
   }
 
-  bool applyMove(ChessMove move) {
-    // final ChessMove(:oldPosition, :newPosition, :piece) = move;
-
-    // Check if the move is legal
-    final isMoveLegal =
-        // Get the piece
-        _tiles[move.oldPosition.toChessTileIndex()]
+  bool isMoveLegal(ChessMove move) {
+    // Get the piece
+    return _tiles[move.oldPosition.toChessTileIndex()]
             // Check it's moves
             ?.legalMoves(move.oldPosition, this)
-            // Can it reach the new Coordinate
+            // Does it contains the move to make
             .any((m) => m.isEqual(move)) ??
         false;
+  }
 
-    // print("isMoveLegal : $isMoveLegal");
-    if (!isMoveLegal) return false;
-
-    move.applyMove(this);
-
+  bool applyMove(ChessMove move) {
+    // Move isn't legal , we can't make it;
+    if (!isMoveLegal(move)) return false;
+    move.applyToBoard(this);
+    // Update history
+    _history.add(ChessHistoryElement(lastMove: move, lastTiles: tiles));
     return true;
   }
 
   void setTile(TileCoordinate coordinate, Piece? piece) {
     _tiles[coordinate.toChessTileIndex()] = piece;
+  }
+
+  Piece? getTile(TileCoordinate coordinate) {
+    return _tiles[coordinate.toChessTileIndex()];
   }
 
   GameStatus gameStatus(SideColor playingSide) {

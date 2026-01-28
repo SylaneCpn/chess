@@ -53,6 +53,11 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
     }
 
     chessBoard.applyMove(move);
+    
+    final lastMove = chessBoard.history.last.lastMove;
+    final lastPieceMoved = chessBoard.getTile(lastMove.newPosition)!;
+    print("lastMove piece type : ${lastPieceMoved.runtimeType}");
+    print("lastPieceMoved row distance : ${(lastMove.oldPosition.row - lastMove.newPosition.row).abs()}");
 
     setState(() {
       playingColor = playingColor.other();
@@ -83,10 +88,9 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
   bool isTileLightedUp(int tileIndex, Set<ChessMove>? legalMoves) {
     if (legalMoves == null) return false;
     return legalMoves
-        .where(
+        .any(
           (t) => t.newPosition == TileCoordinate.fromChessTileIndex(tileIndex),
-        )
-        .isNotEmpty;
+        );
   }
 
   @override

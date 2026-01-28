@@ -13,15 +13,10 @@ sealed class Piece {
 
   Widget asWidget() => SvgPicture.asset(assetImagePath);
   List<ChessMove> moves(TileCoordinate piecePosition, ChessBoard board);
-  List<ChessMove> legalMoves(
-    TileCoordinate piecePosition,
-    ChessBoard board,
-  ) {
+  List<ChessMove> legalMoves(TileCoordinate piecePosition, ChessBoard board) {
     return moves(piecePosition, board).where((m) {
       // See if the move leads to a check
-      final boardWithMove = board.copyWithMove(
-        m,
-      );
+      final boardWithMove = board.copyWithMove(m);
 
       // Can move only if the next position is not check
       return !boardWithMove.isCheck(pieceColor);
@@ -56,7 +51,9 @@ class Pawn extends Piece {
       .black => piecePosition.subRow(1)!,
     };
     if (!board.isTileOccupied(frontTile)) {
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: frontTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: frontTile),
+      );
     }
 
     // Two tile in front on the first move
@@ -67,7 +64,9 @@ class Pawn extends Piece {
       };
       // Cannot go if it's occupied
       if (!board.isTileOccupied(twoTilesInFront)) {
-        positions.add(RegularMove(oldPosition: piecePosition, newPosition: twoTilesInFront));
+        positions.add(
+          RegularMove(oldPosition: piecePosition, newPosition: twoTilesInFront),
+        );
       }
     }
 
@@ -87,7 +86,43 @@ class Pawn extends Piece {
     for (final tile in capturesTiles.where((t) => t != null)) {
       // If there is enemy pieces on capture tiles
       if (board.isEnemyPiece(tile!, pieceColor)) {
-        positions.add(RegularMove(oldPosition: piecePosition, newPosition: tile));
+        positions.add(
+          RegularMove(oldPosition: piecePosition, newPosition: tile),
+        );
+      }
+    }
+
+    // Check for en passant
+    final lastMove = board.history.lastOrNull?.lastMove;
+    if (lastMove case RegularMove(
+      oldPosition: final lastPieceMovedOldPosition,
+      newPosition: final lastPieceMovedNewPosition,
+    )) {
+      final lastPieceMoved = board.getTile(lastPieceMovedNewPosition);
+      // A Pawn has moved two tiles
+      if (lastPieceMoved is Pawn &&
+          ((lastPieceMovedNewPosition.row - lastPieceMovedOldPosition.row)
+                  .abs() ==
+              2)) {
+        // it is next to the selected piece tile
+        if (piecePosition == lastPieceMovedNewPosition.subColumn(1) ||
+            piecePosition == lastPieceMovedNewPosition.addColumn(1)) {
+          // Calculate the row the selected piece should move
+          final newRow =
+              piecePosition.row +
+              ((lastPieceMovedOldPosition.row -
+                      lastPieceMovedNewPosition.row) ~/
+                  2);
+          // Create the position the piece will move to
+          final newTile = TileCoordinate(
+            column: lastPieceMovedNewPosition.column,
+            row: newRow,
+          );
+
+          positions.add(
+            EnPassant(oldPosition: piecePosition, newPosition: newTile),
+          );
+        }
       }
     }
     return positions;
@@ -118,7 +153,9 @@ class Rook extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -136,7 +173,9 @@ class Rook extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -154,7 +193,9 @@ class Rook extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -172,7 +213,9 @@ class Rook extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -205,12 +248,16 @@ class Knight extends Piece {
 
     // if the Tile is not null and there is not an allied piece on it
     if (!(topRightT == null || board.isAlliedPiece(topRightT, pieceColor))) {
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: topRightT));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: topRightT),
+      );
     }
 
     // if the Tile is not null and there is not an allied piece on it
     if (!(topRightB == null || board.isAlliedPiece(topRightB, pieceColor))) {
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: topRightB));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: topRightB),
+      );
     }
 
     // Top left
@@ -219,12 +266,16 @@ class Knight extends Piece {
 
     // if the Tile is not null and there is not an allied piece on it
     if (!(topLeftT == null || board.isAlliedPiece(topLeftT, pieceColor))) {
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: topLeftT));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: topLeftT),
+      );
     }
 
     // if the Tile is not null and there is not an allied piece on it
     if (!(topLeftB == null || board.isAlliedPiece(topLeftB, pieceColor))) {
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: topLeftB));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: topLeftB),
+      );
     }
 
     // Bottom left
@@ -234,13 +285,17 @@ class Knight extends Piece {
     // if the Tile is not null and there is not an allied piece on it
     if (!(bottomLeftT == null ||
         board.isAlliedPiece(bottomLeftT, pieceColor))) {
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: bottomLeftT));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: bottomLeftT),
+      );
     }
 
     // if the Tile is not null and there is not an allied piece on it
     if (!(bottomLeftB == null ||
         board.isAlliedPiece(bottomLeftB, pieceColor))) {
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: bottomLeftB));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: bottomLeftB),
+      );
     }
 
     // Bottom right
@@ -250,13 +305,17 @@ class Knight extends Piece {
     // if the Tile is not null and there is not an allied piece on it
     if (!(bottomRightT == null ||
         board.isAlliedPiece(bottomRightT, pieceColor))) {
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: bottomRightT));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: bottomRightT),
+      );
     }
 
     // if the Tile is not null and there is not an allied piece on it
     if (!(bottomRightB == null ||
         board.isAlliedPiece(bottomRightB, pieceColor))) {
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: bottomRightB));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: bottomRightB),
+      );
     }
 
     return positions;
@@ -287,7 +346,9 @@ class Bishop extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -305,7 +366,9 @@ class Bishop extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -323,7 +386,9 @@ class Bishop extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -341,7 +406,9 @@ class Bishop extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -380,7 +447,9 @@ class Queen extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -398,7 +467,9 @@ class Queen extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -416,7 +487,9 @@ class Queen extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -434,7 +507,9 @@ class Queen extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -454,7 +529,9 @@ class Queen extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -472,7 +549,9 @@ class Queen extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -490,7 +569,9 @@ class Queen extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -508,7 +589,9 @@ class Queen extends Piece {
         break;
       }
 
-      positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+      positions.add(
+        RegularMove(oldPosition: piecePosition, newPosition: newTile),
+      );
       // If it's an opposing piece it can capture but can't
       // go after that
       if (board.isEnemyPiece(newTile, pieceColor)) {
@@ -540,7 +623,9 @@ class King extends Piece {
         if (i == 0 && j == 0) continue;
         final newTile = piecePosition.addRow(i)?.addColumn(j);
         if (newTile != null && !board.isAlliedPiece(newTile, pieceColor)) {
-          positions.add(RegularMove(oldPosition: piecePosition, newPosition: newTile));
+          positions.add(
+            RegularMove(oldPosition: piecePosition, newPosition: newTile),
+          );
         }
       }
     }
