@@ -606,6 +606,56 @@ class Queen extends Piece {
 class King extends Piece {
   King({required super.pieceColor});
 
+  TileCoordinate initTile() {
+    return switch (pieceColor) {
+      .white => TileCoordinate(column: "e", row: 1),
+      .black => TileCoordinate(column: "e", row: 8),
+    };
+  }
+
+  TileCoordinate kingSideRookTile() {
+    return switch(pieceColor) {
+      .white => TileCoordinate(column: "h", row: 1),
+      .black => TileCoordinate(column: "h", row: 8)
+    };
+  }
+
+  List<TileCoordinate> tilesBetweenKingAndKingSideRook() {
+    return switch(pieceColor) {
+      .white => [
+        TileCoordinate(column: "f", row: 1),
+        TileCoordinate(column: "g", row: 1),
+      ],
+      .black => [
+        TileCoordinate(column: "f", row: 8),
+        TileCoordinate(column: "g", row: 8),
+      ]
+    };
+  }
+
+
+  List<TileCoordinate> tilesBetweenKingAndQueenSideRook() {
+    return switch(pieceColor) {
+      .white => [
+        TileCoordinate(column: "b", row: 1),
+        TileCoordinate(column: "c", row: 1),
+        TileCoordinate(column: "d", row: 1),
+      ],
+      .black => [
+        TileCoordinate(column: "b", row: 8),
+        TileCoordinate(column: "c", row: 8),
+        TileCoordinate(column: "d", row: 8),
+      ]
+    };
+  }
+
+  TileCoordinate queenSideRookTile() {
+    return switch (pieceColor) {
+      .white => TileCoordinate(column: "a", row: 1),
+      .black => TileCoordinate(column: "a", row: 8)
+    };
+  }
+
   @override
   String get assetImagePath {
     return switch (pieceColor) {
@@ -629,6 +679,39 @@ class King extends Piece {
         }
       }
     }
+
+    // Castling
+    // Castling Rules :
+    // 1. King hasn't moved
+    // 2. Rook hasn't moved (on the side we want to castle)
+    // 3. No pieces between the king and the rook
+    final previousMoves = board.history.map((he) => he.lastMove);
+
+    // Check if the king has been moved by searching if a move that started on the king init tile exists
+    if (previousMoves
+        .map((pm) => pm.oldPosition)
+        .every((op) => op != initTile())) {
+          // King has not moved
+
+          // Check if king side rook has not moved
+          if(previousMoves.map((pm) => pm.oldPosition).every((op) => op != kingSideRookTile())) {
+
+            // Check is there is no piece occupied piece between
+            if (tilesBetweenKingAndKingSideRook().every((t) => !board.isTileOccupied(t))) {
+              positions.add(Castling(oldPosition: piecePosition, newPosition: piecePosition.addColumn(2)!));
+            }
+
+          }
+
+          // Check if queen side rook has not moved
+          if(previousMoves.map((pm) => pm.oldPosition).every((op) => op != queenSideRookTile())) {
+            // Check is there is no piece occupied piece between
+            if (tilesBetweenKingAndQueenSideRook().every((t) => !board.isTileOccupied(t))) {
+              positions.add(Castling(oldPosition: piecePosition, newPosition: piecePosition.subColumn(2)!));
+            }
+          }
+        }
+
     return positions;
   }
 }

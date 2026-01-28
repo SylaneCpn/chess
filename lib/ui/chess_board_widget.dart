@@ -54,10 +54,10 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
 
     chessBoard.applyMove(move);
     
-    final lastMove = chessBoard.history.last.lastMove;
-    final lastPieceMoved = chessBoard.getTile(lastMove.newPosition)!;
-    print("lastMove piece type : ${lastPieceMoved.runtimeType}");
-    print("lastPieceMoved row distance : ${(lastMove.oldPosition.row - lastMove.newPosition.row).abs()}");
+    // final lastMove = chessBoard.history.last.lastMove;
+    // final lastPieceMoved = chessBoard.getTile(lastMove.newPosition)!;
+    // print("lastMove piece type : ${lastPieceMoved.runtimeType}");
+    // print("lastPieceMoved row distance : ${(lastMove.oldPosition.row - lastMove.newPosition.row).abs()}");
 
     setState(() {
       playingColor = playingColor.other();

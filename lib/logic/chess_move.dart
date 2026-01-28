@@ -17,7 +17,7 @@ class RegularMove extends ChessMove {
   @override
   void applyToBoard(ChessBoard board) {
     // Get the original piece
-    final piece = board.tiles[oldPosition.toChessTileIndex()];
+    final piece = board.getTile(oldPosition);
 
     // Remove it from it's original position
     board.setTile(oldPosition, null);
@@ -39,7 +39,7 @@ class EnPassant extends ChessMove {
   @override
   void applyToBoard(ChessBoard board) {
     // Get the original piece
-    final piece = board.tiles[oldPosition.toChessTileIndex()];
+   final piece = board.getTile(oldPosition);
 
     // Remove it from it's original position
     board.setTile(oldPosition, null);
@@ -48,15 +48,51 @@ class EnPassant extends ChessMove {
     board.setTile(newPosition, piece);
 
     // Remove the captured piece
-    final capturePiecePosition = TileCoordinate(column: newPosition.column, row: oldPosition.row);
+    final capturePiecePosition = TileCoordinate(
+      column: newPosition.column,
+      row: oldPosition.row,
+    );
     board.setTile(capturePiecePosition, null);
   }
 
   @override
   bool isEqual(ChessMove other) =>
-    other is EnPassant && oldPosition == other.oldPosition && newPosition == other.newPosition;
-  
-
+      other is EnPassant &&
+      oldPosition == other.oldPosition &&
+      newPosition == other.newPosition;
 }
 
 // TODO : IMPLEMENT CASTLING
+
+class Castling extends ChessMove {
+  Castling({required super.oldPosition, required super.newPosition});
+
+  @override
+  void applyToBoard(ChessBoard board) {
+    // Get the original piece, should be the king anyway
+    final piece = board.getTile(oldPosition);
+
+    // Remove it from it's original position
+    board.setTile(oldPosition, null);
+
+    // Place it on the newTile
+    board.setTile(newPosition, piece);
+
+    // Pop the rook
+    // "g" is the kind side casteling column tile
+    final rookTile = TileCoordinate(column: newPosition.column == "g" ? "h" : "a", row: oldPosition.row);
+    final rook = board.getTile(rookTile);
+    board.setTile(rookTile, null);
+
+    // Put the rook next to the rook
+    final newRookTile = TileCoordinate(column: newPosition.column == "g" ? "f" : "d", row: oldPosition.row);
+    board.setTile(newRookTile, rook);
+
+  }
+
+  @override
+  bool isEqual(ChessMove other) =>
+      other is Castling &&
+      oldPosition == other.oldPosition &&
+      newPosition == other.newPosition;
+}
