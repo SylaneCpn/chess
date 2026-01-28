@@ -7,4 +7,3 @@ A simple chess game made with flutter.
 
 - game over screen
 - implement draw by repetition
-- implement promoting

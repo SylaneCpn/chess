@@ -7,6 +7,7 @@ import 'package:chess/logic/piece.dart';
 import 'package:chess/logic/side_color.dart';
 import 'package:chess/logic/tile_coordinate.dart';
 import 'package:chess/ui/chess_tile_widget.dart';
+import 'package:chess/ui/promote_wiget.dart';
 import 'package:flutter/material.dart';
 
 class ChessBoardWidget extends StatefulWidget {
@@ -43,17 +44,33 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
     }
   }
 
-  void _onTapCallback(int index, Set<ChessMove>? legalMoves) {
-    final move = legalMoves?.where(
-      (m) => m.newPosition == TileCoordinate.fromChessTileIndex(index),
-    ).firstOrNull;
+  void _onTapCallback(int index, Set<ChessMove>? legalMoves) async {
+    final move = legalMoves
+        ?.where(
+          (m) => m.newPosition == TileCoordinate.fromChessTileIndex(index),
+        )
+        .firstOrNull;
     if (selectedTileIndex == null || move == null) {
       _setSelected(index);
       return;
     }
 
     chessBoard.applyMove(move);
-    
+
+    //Check if can promote
+    if (chessBoard.needToPromote(playingColor) != null) {
+      await showDialog(
+        context: context,
+        builder: (context) => PromoteWiget(
+          sideColor: playingColor,
+          promoteCallback: (piece) {
+            chessBoard.promote(playingColor, piece);
+            Navigator.pop(context);
+          },
+        ),
+      );
+    }
+
     // final lastMove = chessBoard.history.last.lastMove;
     // final lastPieceMoved = chessBoard.getTile(lastMove.newPosition)!;
     // print("lastMove piece type : ${lastPieceMoved.runtimeType}");
@@ -87,10 +104,9 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
 
   bool isTileLightedUp(int tileIndex, Set<ChessMove>? legalMoves) {
     if (legalMoves == null) return false;
-    return legalMoves
-        .any(
-          (t) => t.newPosition == TileCoordinate.fromChessTileIndex(tileIndex),
-        );
+    return legalMoves.any(
+      (t) => t.newPosition == TileCoordinate.fromChessTileIndex(tileIndex),
+    );
   }
 
   @override
