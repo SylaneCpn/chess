@@ -34,7 +34,6 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
 
   void _handleIfGameEnded() {
     final gameStatus = chessBoard.gameStatus(playingColor);
-    print("status : $gameStatus");
     if (gameStatus != GameStatus.stillPlaying) {
       setState(() {
         chessBoard.resetBoard();
@@ -44,21 +43,16 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
     }
   }
 
-  void _onTapCallback(int index, Set<int>? legalMoves) {
-    if (selectedTileIndex == null || !(legalMoves?.contains(index) ?? false)) {
+  void _onTapCallback(int index, Set<ChessMove>? legalMoves) {
+    final move = legalMoves?.where(
+      (m) => m.newPosition == TileCoordinate.fromChessTileIndex(index),
+    ).firstOrNull;
+    if (selectedTileIndex == null || move == null) {
       _setSelected(index);
       return;
     }
-    final oldPosition = TileCoordinate.fromChessTileIndex(selectedTileIndex!);
-    final newPosition = TileCoordinate.fromChessTileIndex(index);
-    final piece = chessBoard.tiles[selectedTileIndex!]!;
-    chessBoard.applyMove(
-      ChessMove(
-        piece: piece,
-        oldPosition: oldPosition,
-        newPosition: newPosition,
-      ),
-    );
+
+    chessBoard.applyMove(move);
 
     setState(() {
       playingColor = playingColor.other();
@@ -69,7 +63,7 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
     _handleIfGameEnded();
   }
 
-  Set<int>? _legalMovesForSelectedIndex() {
+  Set<ChessMove>? _legalMovesForSelectedIndex() {
     if (selectedTileIndex == null) return null;
     final selectedPiece = chessBoard.tiles[selectedTileIndex!];
 
@@ -83,7 +77,16 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
       chessBoard,
     );
 
-    return tiles.map((t) => t.toChessTileIndex()).toSet();
+    return tiles.toSet();
+  }
+
+  bool isTileLightedUp(int tileIndex, Set<ChessMove>? legalMoves) {
+    if (legalMoves == null) return false;
+    return legalMoves
+        .where(
+          (t) => t.newPosition == TileCoordinate.fromChessTileIndex(tileIndex),
+        )
+        .isNotEmpty;
   }
 
   @override
@@ -91,7 +94,7 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final dim = min(constraints.maxHeight, constraints.maxWidth) * 0.8;
-        final lightedTiles = _legalMovesForSelectedIndex();
+        final legalMoves = _legalMovesForSelectedIndex();
         return Column(
           mainAxisAlignment: .center,
           children: [
@@ -107,11 +110,11 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
                 physics: NeverScrollableScrollPhysics(),
                 children: chessBoard.tiles.indexed.map((ie) {
                   return GestureDetector(
-                    onTap: () => _onTapCallback(ie.$1, lightedTiles),
+                    onTap: () => _onTapCallback(ie.$1, legalMoves),
                     child: ChessTileWidget(
                       tileIndex: ie.$1,
                       isSelected: selectedTileIndex == ie.$1,
-                      isLightedUp: lightedTiles?.contains(ie.$1) ?? false,
+                      isLightedUp: isTileLightedUp(ie.$1, legalMoves),
                       piece: ie.$2,
                     ),
                   );

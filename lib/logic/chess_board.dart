@@ -30,12 +30,7 @@ class ChessBoard {
   ChessBoard copyWithMove(ChessMove move) {
     final newBoard = copy();
 
-    final ChessMove(:oldPosition, :newPosition, :piece) = move;
-
-    newBoard._tiles[oldPosition.toChessTileIndex()] = null;
-
-    //add piece to new position
-    newBoard._tiles[newPosition.toChessTileIndex()] = piece;
+    move.applyMove(newBoard);
 
     //Update History
     newBoard._history.add(
@@ -94,28 +89,28 @@ class ChessBoard {
   }
 
   bool applyMove(ChessMove move) {
-    final ChessMove(:oldPosition, :newPosition, :piece) = move;
+    // final ChessMove(:oldPosition, :newPosition, :piece) = move;
 
     // Check if the move is legal
     final isMoveLegal =
         // Get the piece
-        _tiles[oldPosition.toChessTileIndex()]
+        _tiles[move.oldPosition.toChessTileIndex()]
             // Check it's moves
-            ?.legalMoves(oldPosition, this)
+            ?.legalMoves(move.oldPosition, this)
             // Can it reach the new Coordinate
-            .any((m) => m == newPosition) ??
+            .any((m) => m.isEqual(move)) ??
         false;
 
     // print("isMoveLegal : $isMoveLegal");
     if (!isMoveLegal) return false;
 
-    // Remove the piece
-    _tiles[oldPosition.toChessTileIndex()] = null;
-
-    // Replace it on the bord
-    _tiles[newPosition.toChessTileIndex()] = piece;
+    move.applyMove(this);
 
     return true;
+  }
+
+  void setTile(TileCoordinate coordinate, Piece? piece) {
+    _tiles[coordinate.toChessTileIndex()] = piece;
   }
 
   GameStatus gameStatus(SideColor playingSide) {
@@ -142,7 +137,7 @@ class ChessBoard {
         // Get pieces of opposing color
         .where((ip) => ip.$2?.pieceColor == sideColor)
         // Get all of the legal moves for a given color
-        .expand<TileCoordinate>(
+        .expand<ChessMove>(
           (ip) =>
               ip.$2!.legalMoves(TileCoordinate.fromChessTileIndex(ip.$1), this),
         )
@@ -161,7 +156,7 @@ class ChessBoard {
               // Get the position a given opposing piece can reach
               .moves(TileCoordinate.fromChessTileIndex(ip.$1), this)
               // If any of the position is the king , then it's a check
-              .any((pos) => pos == kingPosition),
+              .any((move) => move.newPosition == kingPosition),
         );
   }
 
