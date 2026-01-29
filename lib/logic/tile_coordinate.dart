@@ -1,3 +1,50 @@
+// constants
+
+const whitePawnRow = 2;
+const blackPawnRow = 7;
+
+const whiteKingInitPosition = TileCoordinate._unchecked(column: "e", row: 1);
+const whiteQueenInitPosition = TileCoordinate._unchecked(column: "d", row: 1);
+const whiteKingSideBishopInitPosition = TileCoordinate._unchecked(column: "f", row: 1);
+const whiteQueenSideBishopInitPosition = TileCoordinate._unchecked(column: "c", row: 1);
+const whiteKingSideKnightInitPosition = TileCoordinate._unchecked(column: "g", row: 1);
+const whiteQueenSideKnightInitPosition = TileCoordinate._unchecked(column: "b", row: 1);
+const whiteKingSideRookInitPosition = TileCoordinate._unchecked(column: "h", row: 1);
+const whiteQueenSideRookInitPosition = TileCoordinate._unchecked(column: "a", row: 1);
+
+
+const blackKingInitPosition = TileCoordinate._unchecked(column: "e", row: 8);
+const blackQueenInitPosition = TileCoordinate._unchecked(column: "d", row: 8);
+const blackKingSideBishopInitPosition = TileCoordinate._unchecked(column: "f", row: 8);
+const blackQueenSideBishopInitPosition = TileCoordinate._unchecked(column: "c", row: 8);
+const blackKingSideKnightInitPosition = TileCoordinate._unchecked(column: "g", row: 8);
+const blackQueenSideKnightInitPosition = TileCoordinate._unchecked(column: "b", row: 8);
+const blackKingSideRookInitPosition = TileCoordinate._unchecked(column: "h", row: 8);
+const blackQueenSideRookInitPosition = TileCoordinate._unchecked(column: "a", row: 8);
+
+const tilesBetweenWhiteKingAndKingSideRook = [
+        TileCoordinate._unchecked(column: "f", row: 1),
+        TileCoordinate._unchecked(column: "g", row: 1),
+      ];
+
+const tilesBetweenBlackKingAndKingSideRook = [
+        TileCoordinate._unchecked(column: "f", row: 8),
+        TileCoordinate._unchecked(column: "g", row: 8),
+      ];
+
+
+const tilesBetweenWhiteKingAndQueenSideRook = [
+        TileCoordinate._unchecked(column: "b", row: 1),
+        TileCoordinate._unchecked(column: "c", row: 1),
+        TileCoordinate._unchecked(column: "d", row: 1),
+      ];
+
+const tilesBetweenBlackKingAndQueenSideRook = [
+        TileCoordinate._unchecked(column: "b", row: 8),
+        TileCoordinate._unchecked(column: "c", row: 8),
+        TileCoordinate._unchecked(column: "d", row: 8),
+      ];
+
 class TileCoordinate {
   final String column;
   final int row;

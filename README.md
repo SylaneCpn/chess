@@ -5,5 +5,6 @@ A simple chess game made with flutter.
 
 ## TODO
 
-- game over screen
+- better looking gameover screen
+- move animation
 - implement draw by repetition

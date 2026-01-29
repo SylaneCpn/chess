@@ -7,6 +7,7 @@ import 'package:chess/logic/piece.dart';
 import 'package:chess/logic/side_color.dart';
 import 'package:chess/logic/tile_coordinate.dart';
 import 'package:chess/ui/chess_tile_widget.dart';
+import 'package:chess/ui/game_over_screen.dart';
 import 'package:chess/ui/promote_wiget.dart';
 import 'package:flutter/material.dart';
 
@@ -20,7 +21,6 @@ class ChessBoardWidget extends StatefulWidget {
 class _ChessBoardWidgetState extends State<ChessBoardWidget> {
   final ChessBoard chessBoard = .new();
   SideColor orientationColor = .white;
-  SideColor playingColor = .white;
   int? selectedTileIndex;
 
   void _setSelected(int index) {
@@ -33,15 +33,28 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
     });
   }
 
-  void _handleIfGameEnded() {
-    final gameStatus = chessBoard.gameStatus(playingColor);
+  void _handleIfGameEnded() async {
+    final gameStatus = chessBoard.gameStatus();
     if (gameStatus != GameStatus.stillPlaying) {
-      setState(() {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => GameOverScreen(gameStatus: gameStatus, winningSide: chessBoard.playingSide.other()),
+      );
+    }
+  }
+
+  void resetGame() {
+    setState(() {
         chessBoard.resetBoard();
-        playingColor = .white;
         orientationColor = .white;
       });
-    }
+  }
+
+  void flipBoard() {
+    setState(() {
+      orientationColor = orientationColor.other();
+    });
   }
 
   void _onTapCallback(int index, Set<ChessMove>? legalMoves) async {
@@ -63,14 +76,14 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
     });
 
     //Check if can promote
-    if (chessBoard.needToPromote(playingColor) != null) {
+    if (chessBoard.needToPromote() != null) {
       await showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => PromoteWiget(
-          sideColor: playingColor,
+          sideColor: chessBoard.playingSide.other(),
           promoteCallback: (piece) {
-            chessBoard.promote(playingColor, piece);
+            chessBoard.promote(piece);
             Navigator.pop(context);
           },
         ),
@@ -83,7 +96,6 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
     // print("lastPieceMoved row distance : ${(lastMove.oldPosition.row - lastMove.newPosition.row).abs()}");
 
     setState(() {
-      playingColor = playingColor.other();
       selectedTileIndex = null;
     });
 
@@ -96,7 +108,7 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
     final selectedPiece = chessBoard.tiles[selectedTileIndex!];
 
     // No selected piece or Not for the side playing
-    if (selectedPiece == null || selectedPiece.pieceColor != playingColor) {
+    if (selectedPiece == null || selectedPiece.pieceColor != chessBoard.playingSide) {
       return null;
     }
 
@@ -154,11 +166,19 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
                 crossAxisAlignment: .center,
                 mainAxisAlignment: .center,
                 children: [
-                  King(pieceColor: playingColor).asWidget(),
+                  King(pieceColor: chessBoard.playingSide).asWidget(),
                   Text("to play."),
                 ],
               ),
             ),
+
+            Row(
+              mainAxisAlignment: .spaceEvenly,
+              children: [
+                TextButton(onPressed: resetGame, child: Text("Reset Game")),
+                TextButton(onPressed: flipBoard, child: Text("Flip Board"))
+              ],
+            )
           ],
         );
       },

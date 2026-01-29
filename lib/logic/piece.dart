@@ -29,8 +29,8 @@ class Pawn extends Piece {
 
   bool isInitTile(TileCoordinate piecePosition) {
     return switch (pieceColor) {
-      .white => piecePosition.row == 2,
-      .black => piecePosition.row == 7,
+      .white => piecePosition.row == whitePawnRow,
+      .black => piecePosition.row == blackPawnRow,
     };
   }
 
@@ -604,55 +604,41 @@ class Queen extends Piece {
 }
 
 class King extends Piece {
-  King({required super.pieceColor});
+  const King({required super.pieceColor});
 
   TileCoordinate initTile() {
     return switch (pieceColor) {
-      .white => TileCoordinate(column: "e", row: 1),
-      .black => TileCoordinate(column: "e", row: 8),
+      .white => whiteKingInitPosition,
+      .black =>blackKingInitPosition,
     };
   }
 
   TileCoordinate kingSideRookTile() {
     return switch(pieceColor) {
-      .white => TileCoordinate(column: "h", row: 1),
-      .black => TileCoordinate(column: "h", row: 8)
+      .white => whiteKingSideRookInitPosition,
+      .black => blackKingSideRookInitPosition
     };
   }
 
   List<TileCoordinate> tilesBetweenKingAndKingSideRook() {
     return switch(pieceColor) {
-      .white => [
-        TileCoordinate(column: "f", row: 1),
-        TileCoordinate(column: "g", row: 1),
-      ],
-      .black => [
-        TileCoordinate(column: "f", row: 8),
-        TileCoordinate(column: "g", row: 8),
-      ]
+      .white => tilesBetweenWhiteKingAndKingSideRook,
+      .black => tilesBetweenBlackKingAndKingSideRook
     };
   }
 
 
   List<TileCoordinate> tilesBetweenKingAndQueenSideRook() {
     return switch(pieceColor) {
-      .white => [
-        TileCoordinate(column: "b", row: 1),
-        TileCoordinate(column: "c", row: 1),
-        TileCoordinate(column: "d", row: 1),
-      ],
-      .black => [
-        TileCoordinate(column: "b", row: 8),
-        TileCoordinate(column: "c", row: 8),
-        TileCoordinate(column: "d", row: 8),
-      ]
+      .white => tilesBetweenWhiteKingAndQueenSideRook,
+      .black => tilesBetweenBlackKingAndQueenSideRook
     };
   }
 
   TileCoordinate queenSideRookTile() {
     return switch (pieceColor) {
-      .white => TileCoordinate(column: "a", row: 1),
-      .black => TileCoordinate(column: "a", row: 8)
+      .white => whiteQueenSideRookInitPosition,
+      .black => blackQueenSideRookInitPosition
     };
   }
 

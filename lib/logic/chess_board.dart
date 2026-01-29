@@ -10,10 +10,15 @@ import 'package:chess/logic/tile_coordinate.dart';
 class ChessBoard {
   final List<ChessHistoryElement> _history;
   final List<Piece?> _tiles = List.filled(64, null);
+  SideColor _playingSide;
 
   ChessBoard() : this._();
-  ChessBoard._({List<Piece?>? tiles, List<ChessHistoryElement>? history})
-    : _history = history?.toList() ?? [] {
+  ChessBoard._({
+    List<Piece?>? tiles,
+    List<ChessHistoryElement>? history,
+    SideColor playingSide = .white,
+  }) : _history = history?.toList() ?? [],
+       _playingSide = playingSide {
     if (tiles != null) {
       for (int i = 0; i < 64; i++) {
         _tiles[i] = tiles[i];
@@ -24,7 +29,11 @@ class ChessBoard {
   }
 
   ChessBoard copy() {
-    return ChessBoard._(tiles: tiles, history: history);
+    return ChessBoard._(
+      tiles: tiles,
+      history: history,
+      playingSide: _playingSide,
+    );
   }
 
   ChessBoard copyWithMove(ChessMove move) {
@@ -36,6 +45,9 @@ class ChessBoard {
     newBoard._history.add(
       ChessHistoryElement(lastMove: move, lastTiles: tiles),
     );
+
+    //Update Playing Side
+    newBoard._playingSide = _playingSide.other();
 
     return newBoard;
   }
@@ -49,8 +61,10 @@ class ChessBoard {
   UnmodifiableListView<ChessHistoryElement> get history =>
       UnmodifiableListView(_history);
 
-  TileCoordinate? needToPromote(SideColor color) {
-    final startRange = switch (color) {
+  SideColor get playingSide => _playingSide;
+
+  TileCoordinate? needToPromote() {
+    final startRange = switch (_playingSide.other()) {
       .white => 56,
       .black => 0,
     };
@@ -79,12 +93,12 @@ class ChessBoard {
     return _tiles[coordinate.toChessTileIndex()] != null;
   }
 
-  bool promote(SideColor color, Piece newPiece) {
-    final promotionPawnPosition = needToPromote(color);
+  bool promote(Piece newPiece) {
+    final promotionPawnPosition = needToPromote();
     if (promotionPawnPosition == null) return false;
 
     // Replace the pawn
-    _tiles[promotionPawnPosition.toChessTileIndex()] = newPiece;
+    _setTile(promotionPawnPosition, newPiece);
     return true;
   }
 
@@ -98,16 +112,36 @@ class ChessBoard {
         false;
   }
 
+  bool hasInsufficientMaterial() {
+    // Check for white
+    final whitePieces = _tiles.where((p) => p?.pieceColor == .white);
+    final hasWhiteInsufficientMaterial =
+        whitePieces.toList().length == 1 ||
+        (whitePieces.toList().length == 2 &&
+            whitePieces.where((p) => p is Knight || p is Bishop).isNotEmpty);
+
+
+    // Check for black
+    final blackPieces = _tiles.where((p) => p?.pieceColor == .black);
+    final hasBlackInsufficientMaterial =
+        blackPieces.toList().length == 1 ||
+        (blackPieces.toList().length == 2 &&
+            blackPieces.where((p) => p is Knight || p is Bishop).isNotEmpty);
+
+
+    return hasBlackInsufficientMaterial && hasWhiteInsufficientMaterial;
+  }
+
   bool applyMove(ChessMove move) {
     // Move isn't legal , we can't make it;
     if (!isMoveLegal(move)) return false;
     move.updateTiles(_tiles);
     // Update history
     _history.add(ChessHistoryElement(lastMove: move, lastTiles: tiles));
+    _playingSide = _playingSide.other();
     return true;
   }
 
-  // ignore: unused_element
   void _setTile(TileCoordinate coordinate, Piece? piece) {
     _tiles[coordinate.toChessTileIndex()] = piece;
   }
@@ -116,11 +150,14 @@ class ChessBoard {
     return _tiles[coordinate.toChessTileIndex()];
   }
 
-  GameStatus gameStatus(SideColor playingSide) {
-    if (isCheckMate(playingSide)) {
+  GameStatus gameStatus() {
+    if (isCheckMate(_playingSide)) {
       return .checkMate;
-    } else if (!hasLegalMoves(playingSide) && !isCheck(playingSide)) {
+    } else if (!hasLegalMoves(_playingSide) && !isCheck(_playingSide)) {
       return .staleMate;
+    }
+    else if (hasInsufficientMaterial()) {
+      return .insufficientMaterial;
     }
 
     //TODO IMPLEMENT DRAW BY REPETITION
@@ -172,6 +209,7 @@ class ChessBoard {
   void _generateTiles() {
     //Reset
     _tiles.fillRange(0, 64);
+
     // Fill white pawns
     for (int i = 8; i < 16; i++) {
       _tiles[i] = Pawn(pieceColor: .white);
@@ -180,38 +218,28 @@ class ChessBoard {
     // Other white pieces
 
     // Rooks
-    _tiles[TileCoordinate(column: "a", row: 1).toChessTileIndex()] = Rook(
-      pieceColor: .white,
-    );
-    _tiles[TileCoordinate(column: "h", row: 1).toChessTileIndex()] = Rook(
-      pieceColor: .white,
-    );
+    _setTile(whiteQueenSideRookInitPosition, const Rook(pieceColor: .white));
+    _setTile(whiteKingSideRookInitPosition, const Rook(pieceColor: .white));
 
     // Knights
-    _tiles[TileCoordinate(column: "b", row: 1).toChessTileIndex()] = Knight(
-      pieceColor: .white,
+    _setTile(
+      whiteQueenSideKnightInitPosition,
+      const Knight(pieceColor: .white),
     );
-    _tiles[TileCoordinate(column: "g", row: 1).toChessTileIndex()] = Knight(
-      pieceColor: .white,
-    );
+    _setTile(whiteKingSideKnightInitPosition, const Knight(pieceColor: .white));
 
     // Bishops
-    _tiles[TileCoordinate(column: "c", row: 1).toChessTileIndex()] = Bishop(
-      pieceColor: .white,
+    _setTile(
+      whiteQueenSideBishopInitPosition,
+      const Bishop(pieceColor: .white),
     );
-    _tiles[TileCoordinate(column: "f", row: 1).toChessTileIndex()] = Bishop(
-      pieceColor: .white,
-    );
+    _setTile(whiteKingSideBishopInitPosition, const Bishop(pieceColor: .white));
 
     // Queen
-    _tiles[TileCoordinate(column: "d", row: 1).toChessTileIndex()] = Queen(
-      pieceColor: .white,
-    );
+    _setTile(whiteQueenInitPosition, const Queen(pieceColor: .white));
 
     // King
-    _tiles[TileCoordinate(column: "e", row: 1).toChessTileIndex()] = King(
-      pieceColor: .white,
-    );
+    _setTile(whiteKingInitPosition, const King(pieceColor: .white));
 
     // Fill Black pawns
     for (int i = 48; i < 56; i++) {
@@ -221,37 +249,27 @@ class ChessBoard {
     // Other black pieces
 
     // Rooks
-    _tiles[TileCoordinate(column: "a", row: 8).toChessTileIndex()] = Rook(
-      pieceColor: .black,
-    );
-    _tiles[TileCoordinate(column: "h", row: 8).toChessTileIndex()] = Rook(
-      pieceColor: .black,
-    );
+    _setTile(blackQueenSideRookInitPosition, const Rook(pieceColor: .black));
+    _setTile(blackKingSideRookInitPosition, const Rook(pieceColor: .black));
 
     // Knights
-    _tiles[TileCoordinate(column: "b", row: 8).toChessTileIndex()] = Knight(
-      pieceColor: .black,
+    _setTile(
+      blackQueenSideKnightInitPosition,
+      const Knight(pieceColor: .black),
     );
-    _tiles[TileCoordinate(column: "g", row: 8).toChessTileIndex()] = Knight(
-      pieceColor: .black,
-    );
+    _setTile(blackKingSideKnightInitPosition, const Knight(pieceColor: .black));
 
     // Bishops
-    _tiles[TileCoordinate(column: "c", row: 8).toChessTileIndex()] = Bishop(
-      pieceColor: .black,
+    _setTile(
+      blackQueenSideBishopInitPosition,
+      const Bishop(pieceColor: .black),
     );
-    _tiles[TileCoordinate(column: "f", row: 8).toChessTileIndex()] = Bishop(
-      pieceColor: .black,
-    );
+    _setTile(blackKingSideBishopInitPosition, const Bishop(pieceColor: .black));
 
     // Queen
-    _tiles[TileCoordinate(column: "d", row: 8).toChessTileIndex()] = Queen(
-      pieceColor: .black,
-    );
+    _setTile(blackQueenInitPosition, const Queen(pieceColor: .black));
 
     // King
-    _tiles[TileCoordinate(column: "e", row: 8).toChessTileIndex()] = King(
-      pieceColor: .black,
-    );
+    _setTile(blackKingInitPosition, const King(pieceColor: .black));
   }
 }
