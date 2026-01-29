@@ -1,16 +1,17 @@
 class TileCoordinate {
-  late final String column;
+  final String column;
   final int row;
 
   static bool isRowValid(int rowNumber) => rowNumber >= 1 && rowNumber <= 8;
-  static bool isColumnNumberValid(int columnNumber) => columnNumber >= 0 && columnNumber <= 7;
+  static bool isColumnNumberValid(int columnNumber) =>
+      columnNumber >= 0 && columnNumber <= 7;
   static bool isColumnValid(String column) {
     final cToLower = column.toLowerCase();
     return cToLower.codeUnitAt(0) >= "a".codeUnitAt(0) &&
         cToLower.codeUnitAt(0) <= "h".codeUnitAt(0);
   }
 
-  TileCoordinate({required String column, required this.row}) {
+  factory TileCoordinate({required String column, required int row}) {
     if (!isColumnValid(column)) {
       throw ArgumentError(
         "Cannot get TileCoordinate from : \"$column$row\" , column must be a letter between a & h",
@@ -21,8 +22,12 @@ class TileCoordinate {
         "Cannot get TileCoordinate from : \"$column$row\" , row must be a int between 1 & 8",
       );
     }
-    this.column = column.toLowerCase();
+    return TileCoordinate._unchecked(column: column.toLowerCase(), row: row);
   }
+
+  // Be carefull, there is no arguments checking on this one, this can break the app 
+  // if the provided arguments don't respect the constraints.
+  const TileCoordinate._unchecked({required this.column, required this.row});
 
   @override
   bool operator ==(Object other) {
@@ -31,9 +36,7 @@ class TileCoordinate {
   }
 
   @override
-  int get hashCode {
-    return column.hashCode + row.hashCode;
-  }
+  int get hashCode => Object.hash(column, row);
 
   @override
   String toString() => "$column$row";
@@ -80,9 +83,4 @@ class TileCoordinate {
     }
     return String.fromCharCode("a".codeUnitAt(0) + column);
   }
-  
-  
-  
-  
-  
 }

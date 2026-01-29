@@ -30,7 +30,7 @@ class ChessBoard {
   ChessBoard copyWithMove(ChessMove move) {
     final newBoard = copy();
 
-    move.applyToBoard(newBoard);
+    move.updateTiles(newBoard._tiles);
 
     //Update History
     newBoard._history.add(
@@ -101,13 +101,14 @@ class ChessBoard {
   bool applyMove(ChessMove move) {
     // Move isn't legal , we can't make it;
     if (!isMoveLegal(move)) return false;
-    move.applyToBoard(this);
+    move.updateTiles(_tiles);
     // Update history
     _history.add(ChessHistoryElement(lastMove: move, lastTiles: tiles));
     return true;
   }
 
-  void setTile(TileCoordinate coordinate, Piece? piece) {
+  // ignore: unused_element
+  void _setTile(TileCoordinate coordinate, Piece? piece) {
     _tiles[coordinate.toChessTileIndex()] = piece;
   }
 

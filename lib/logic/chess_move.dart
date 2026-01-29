@@ -1,4 +1,5 @@
-import 'package:chess/logic/chess_board.dart';
+
+import 'package:chess/logic/piece.dart';
 import 'package:chess/logic/tile_coordinate.dart';
 
 sealed class ChessMove {
@@ -7,7 +8,7 @@ sealed class ChessMove {
   final TileCoordinate oldPosition;
   final TileCoordinate newPosition;
 
-  void applyToBoard(ChessBoard board);
+  void updateTiles(List<Piece?> tiles);
   bool isEqual(ChessMove other);
 }
 
@@ -15,15 +16,15 @@ class RegularMove extends ChessMove {
   RegularMove({required super.oldPosition, required super.newPosition});
 
   @override
-  void applyToBoard(ChessBoard board) {
+  void updateTiles(List<Piece?> tiles) {
     // Get the original piece
-    final piece = board.getTile(oldPosition);
+    final piece = tiles[oldPosition.toChessTileIndex()];
 
     // Remove it from it's original position
-    board.setTile(oldPosition, null);
+    tiles[oldPosition.toChessTileIndex()] = null;
 
     // Place it on the newTile
-    board.setTile(newPosition, piece);
+    tiles[newPosition.toChessTileIndex()] = piece;
   }
 
   @override
@@ -37,22 +38,22 @@ class EnPassant extends ChessMove {
   EnPassant({required super.oldPosition, required super.newPosition});
 
   @override
-  void applyToBoard(ChessBoard board) {
+  void updateTiles(List<Piece?> tiles) {
     // Get the original piece
-   final piece = board.getTile(oldPosition);
+    final piece = tiles[oldPosition.toChessTileIndex()];
 
     // Remove it from it's original position
-    board.setTile(oldPosition, null);
+    tiles[oldPosition.toChessTileIndex()] = null;
 
     // Place it on the newTile
-    board.setTile(newPosition, piece);
+    tiles[newPosition.toChessTileIndex()] = piece;
 
     // Remove the captured piece
     final capturePiecePosition = TileCoordinate(
       column: newPosition.column,
       row: oldPosition.row,
     );
-    board.setTile(capturePiecePosition, null);
+    tiles[capturePiecePosition.toChessTileIndex()] = null;
   }
 
   @override
@@ -62,31 +63,30 @@ class EnPassant extends ChessMove {
       newPosition == other.newPosition;
 }
 
-// TODO : IMPLEMENT CASTLING
 
 class Castling extends ChessMove {
   Castling({required super.oldPosition, required super.newPosition});
 
   @override
-  void applyToBoard(ChessBoard board) {
-    // Get the original piece, should be the king anyway
-    final piece = board.getTile(oldPosition);
+  void updateTiles(List<Piece?> tiles) {
+    // Get the original piece
+    final piece = tiles[oldPosition.toChessTileIndex()];
 
     // Remove it from it's original position
-    board.setTile(oldPosition, null);
+    tiles[oldPosition.toChessTileIndex()] = null;
 
     // Place it on the newTile
-    board.setTile(newPosition, piece);
+    tiles[newPosition.toChessTileIndex()] = piece;
 
     // Pop the rook
     // "g" is the kind side casteling column tile
     final rookTile = TileCoordinate(column: newPosition.column == "g" ? "h" : "a", row: oldPosition.row);
-    final rook = board.getTile(rookTile);
-    board.setTile(rookTile, null);
+    final rook = tiles[rookTile.toChessTileIndex()];
+    tiles[rookTile.toChessTileIndex()] = null;
 
     // Put the rook next to the rook
     final newRookTile = TileCoordinate(column: newPosition.column == "g" ? "f" : "d", row: oldPosition.row);
-    board.setTile(newRookTile, rook);
+   tiles[newRookTile.toChessTileIndex()] = rook;
 
   }
 
