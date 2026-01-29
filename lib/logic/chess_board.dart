@@ -55,6 +55,7 @@ class ChessBoard {
   void resetBoard() {
     _generateTiles();
     _history.clear();
+    _playingSide = .white;
   }
 
   UnmodifiableListView<Piece?> get tiles => UnmodifiableListView(_tiles);
