@@ -679,8 +679,8 @@ class King extends Piece {
         .every((op) => op != initTile())) {
           // King has not moved
 
-          // Check if king side rook has not moved
-          if(previousMoves.map((pm) => pm.oldPosition).every((op) => op != kingSideRookTile())) {
+          // Check if king side rook has not moved and is still here
+          if(previousMoves.every((pm) => pm.oldPosition != kingSideRookTile() && pm.newPosition != kingSideRookTile())) {
 
             // Check is there is no piece occupied piece between
             if (tilesBetweenKingAndKingSideRook().every((t) => !board.isTileOccupied(t))) {
@@ -689,8 +689,8 @@ class King extends Piece {
 
           }
 
-          // Check if queen side rook has not moved
-          if(previousMoves.map((pm) => pm.oldPosition).every((op) => op != queenSideRookTile())) {
+          // Check if queen side rook has not moved and is still here
+          if(previousMoves.every((pm) => pm.oldPosition != queenSideRookTile() && pm.newPosition != queenSideRookTile())) {
             // Check is there is no piece occupied piece between
             if (tilesBetweenKingAndQueenSideRook().every((t) => !board.isTileOccupied(t))) {
               positions.add(Castling(oldPosition: piecePosition, newPosition: piecePosition.subColumn(2)!));

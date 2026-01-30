@@ -121,7 +121,6 @@ class ChessBoard {
         (whitePieces.toList().length == 2 &&
             whitePieces.where((p) => p is Knight || p is Bishop).isNotEmpty);
 
-
     // Check for black
     final blackPieces = _tiles.where((p) => p?.pieceColor == .black);
     final hasBlackInsufficientMaterial =
@@ -129,13 +128,13 @@ class ChessBoard {
         (blackPieces.toList().length == 2 &&
             blackPieces.where((p) => p is Knight || p is Bishop).isNotEmpty);
 
-
     return hasBlackInsufficientMaterial && hasWhiteInsufficientMaterial;
   }
 
   bool applyMove(ChessMove move) {
     // Move isn't legal , we can't make it;
-    if (!isMoveLegal(move)) return false;
+    // Or it not right side playing
+    if (!isMoveLegal(move) || getTile(move.oldPosition)?.pieceColor != _playingSide) return false;
     move.updateTiles(_tiles);
     // Update history
     _history.add(ChessHistoryElement(lastMove: move, lastTiles: tiles));
@@ -156,8 +155,7 @@ class ChessBoard {
       return .checkMate;
     } else if (!hasLegalMoves(_playingSide) && !isCheck(_playingSide)) {
       return .staleMate;
-    }
-    else if (hasInsufficientMaterial()) {
+    } else if (hasInsufficientMaterial()) {
       return .insufficientMaterial;
     }
 
