@@ -232,6 +232,7 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget>
     final legalMoves = _legalMovesForSelectedIndex();
 
     return Column(
+      mainAxisAlignment: .center,
       children: [
         Flexible(
           child: Padding(
