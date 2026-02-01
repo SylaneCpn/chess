@@ -71,6 +71,10 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget>
         ),
       );
     }
+
+    setState(() {
+      
+    });
   }
 
   Future<void> _handlePromotion() async {
@@ -87,6 +91,10 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget>
         ),
       );
     }
+
+    setState(() {
+      
+    });
   }
 
   void resetGame() {
@@ -100,6 +108,21 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget>
     setState(() {
       orientationColor = orientationColor.other();
     });
+  }
+
+  void toggleAutoFlip() {
+    if(autoFlip) {
+      setState(() {
+        autoFlip = false;
+      });
+    }
+
+    else {
+      setState(() {
+        autoFlip = true;
+        orientationColor = chessBoard.playingSide;
+      });
+    }
   }
 
   void _onTapCallback(int index, Set<ChessMove>? legalMoves) async {
@@ -136,6 +159,7 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget>
     //Check if can promote
     await _handlePromotion();
 
+    await Future.delayed(const Duration(milliseconds: 200));
     setState(() {
       if (autoFlip) {
         orientationColor = chessBoard.playingSide;
@@ -209,7 +233,7 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget>
 
     return Column(
       children: [
-        Expanded(
+        Flexible(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: AspectRatio(
@@ -290,9 +314,7 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget>
           children: [
             Checkbox(
               value: autoFlip,
-              onChanged: (flag) => setState(() {
-                autoFlip = flag!;
-              }),
+              onChanged: (_) => toggleAutoFlip(),
             ),
             Text("Autoflip"),
           ],

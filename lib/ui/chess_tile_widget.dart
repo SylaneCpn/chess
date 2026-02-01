@@ -15,7 +15,7 @@ class ChessTileWidget extends StatelessWidget {
   const ChessTileWidget({
     super.key,
     required this.tileIndex,
-    this.darkTileColor = Colors.cyanAccent,
+    this.darkTileColor = const Color.fromARGB(255, 12, 117, 58),
     this.lightTileColor = Colors.white12,
     this.piece,
     this.hidePiece = false,
