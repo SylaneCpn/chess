@@ -23,6 +23,11 @@ Let you want to play chess with your sibling, your friend or your cat and you do
 - Piece and color customisation
 
 
+## Assets
+
+The piece assets are not mine they have been taken from [greenchess.net](https://greenchess.net/info.php?item=downloads).
+
+
 ## Getting Started
 
 If you want to try the app, you can access the [web version](https://sylanecpn.github.io/chess).

@@ -9,6 +9,7 @@ class ChessBoardWidget extends StatelessWidget {
   final Iterable<Piece?> tiles;
   final List<int>? hiddenTilesIndexes;
   final List<int>? lightedUpTilesIndexes;
+  final List<int>? lastTilesIndexes;
   final int? selectedTileIndex;
   const ChessBoardWidget({
     super.key,
@@ -18,6 +19,7 @@ class ChessBoardWidget extends StatelessWidget {
     this.hiddenTilesIndexes,
     this.lightedUpTilesIndexes,
     required this.selectedTileIndex,
+    this.lastTilesIndexes,
   });
 
   @override
@@ -34,6 +36,7 @@ class ChessBoardWidget extends StatelessWidget {
             hidePiece: hiddenTilesIndexes?.contains(ie.$1) ?? false,
             isSelected: selectedTileIndex == ie.$1,
             isLightedUp: lightedUpTilesIndexes?.contains(ie.$1) ?? false,
+            isLastMove: lastTilesIndexes?.contains(ie.$1) ?? false ,
             piece: ie.$2,
           ),
         );

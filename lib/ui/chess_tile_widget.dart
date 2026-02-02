@@ -5,11 +5,14 @@ class ChessTileWidget extends StatelessWidget {
   final int tileIndex;
   final bool isLightedUp;
   final bool isSelected;
+  final bool isLastMove;
   final Color darkTileColor;
   final Color lightTileColor;
   final Color selectedTileColor;
   final Color lightedLightTileColor;
   final Color lightedDarkTileColor;
+  final Color lastLightTileColor;
+  final Color lastDarkTileColor;
   final Piece? piece;
   final bool hidePiece;
   const ChessTileWidget({
@@ -21,9 +24,13 @@ class ChessTileWidget extends StatelessWidget {
     this.hidePiece = false,
     this.isLightedUp = false,
     this.isSelected = false,
+    this.isLastMove = false,
     this.selectedTileColor = Colors.teal,
-    this.lightedLightTileColor = Colors.lightBlueAccent,
-    this.lightedDarkTileColor = Colors.blueAccent,
+    this.lightedLightTileColor = const Color.fromARGB(255, 64, 255, 124),
+    this.lightedDarkTileColor = const Color.fromARGB(255, 71, 195, 141),
+    this.lastDarkTileColor = const Color.fromARGB(255, 246, 106, 96),
+    this.lastLightTileColor = Colors.red
+
   });
 
   bool get isDarkSquare {
@@ -36,11 +43,17 @@ class ChessTileWidget extends StatelessWidget {
     return switch (isDarkSquare) {
       true => switch (isLightedUp) {
         true => lightedDarkTileColor,
-        _ => darkTileColor,
+        _ => switch(isLastMove) {
+          true => lastDarkTileColor,
+          _ => darkTileColor,
+        },
       },
       _ => switch (isLightedUp) {
         true => lightedLightTileColor,
-        _ => lightTileColor,
+        _ => switch (isLastMove) {
+          true => lastLightTileColor,
+          _ => lightTileColor
+        },
       },
     };
   }

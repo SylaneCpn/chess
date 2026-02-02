@@ -153,12 +153,13 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
     //Check if can promote
     await _handlePromotion();
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    if (autoFlip) {
+      await Future.delayed(const Duration(milliseconds: 200));
     setState(() {
-      if (autoFlip) {
         orientationColor = chessBoard.playingSide;
-      }
     });
+    }
+    
     // Check if game has ended
     await _handleIfGameEnded();
   }
@@ -221,6 +222,17 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
     return Position(bottom: hm * progress + hp, left: vm * progress + vp);
   }
 
+  List<int>? _lastTilesIndexes() {
+    final previousMove = chessBoard.history.lastOrNull?.lastMove;
+    final lastTilesIndexes = previousMove != null
+        ? [
+            previousMove.oldPosition.toChessTileIndex(),
+            previousMove.newPosition.toChessTileIndex(),
+          ]
+        : null;
+    return lastTilesIndexes;
+  }
+
   @override
   Widget build(BuildContext context) {
     final legalMoves = _legalMovesForSelectedIndex();
@@ -228,6 +240,39 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
     return Column(
       mainAxisAlignment: .center,
       children: [
+        Align(
+          alignment: .topRight,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: MenuAnchor(
+              menuChildren: [
+                MenuItemButton(
+                  onPressed: autoFlip ? null : flipBoard,
+                  child: Text("Rotate board"),
+                ),
+                MenuItemButton(
+                  onPressed: toggleAutoFlip,
+                  child: autoFlip
+                      ? Text("Desactivate autoflip")
+                      : Text("Activate autoflip"),
+                ),
+                MenuItemButton(
+                  onPressed: resetGame,
+                  child: Text("Reset board"),
+                ),
+              ],
+              child: Icon(Icons.more_vert),
+              builder: (context, controller, child) {
+                return IconButton(
+                  onPressed: () => controller.isOpen
+                      ? controller.close()
+                      : controller.open(),
+                  icon: child!,
+                );
+              },
+            ),
+          ),
+        ),
         Flexible(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -252,6 +297,7 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
                       finalPosition: destinationPosition,
                       progress: _animationValue,
                     );
+
                     return Stack(
                       children: [
                         ChessBoardWidget(
@@ -268,6 +314,7 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
                                 (index) => isTileLightedUp(index, legalMoves),
                               )
                               .toList(),
+                          lastTilesIndexes: _lastTilesIndexes(),
                         ),
                         if (selectedTileIndex != null)
                           Positioned(
@@ -300,25 +347,6 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
               Text("to play."),
             ],
           ),
-        ),
-
-        Row(
-          mainAxisAlignment: .center,
-          children: [
-            Checkbox(value: autoFlip, onChanged: (_) => toggleAutoFlip()),
-            Text("Autoflip"),
-          ],
-        ),
-
-        Row(
-          mainAxisAlignment: .spaceEvenly,
-          children: [
-            TextButton(onPressed: resetGame, child: Text("Reset Game")),
-            TextButton(
-              onPressed: !autoFlip ? flipBoard : null,
-              child: Text("Flip Board"),
-            ),
-          ],
         ),
       ],
     );
