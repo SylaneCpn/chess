@@ -7,13 +7,13 @@ import 'package:chess/logic/piece.dart';
 import 'package:chess/logic/side_color.dart';
 import 'package:chess/logic/tile_coordinate.dart';
 
-class ChessBoard {
+class ChessGame {
   final List<ChessHistoryElement> _history;
   final List<Piece?> _tiles = List.filled(64, null);
   SideColor _playingSide;
 
-  ChessBoard() : this._();
-  ChessBoard._({
+  ChessGame() : this._();
+  ChessGame._({
     List<Piece?>? tiles,
     List<ChessHistoryElement>? history,
     SideColor playingSide = .white,
@@ -28,15 +28,15 @@ class ChessBoard {
     }
   }
 
-  ChessBoard copy() {
-    return ChessBoard._(
+  ChessGame copy() {
+    return ChessGame._(
       tiles: tiles,
       history: history,
       playingSide: _playingSide,
     );
   }
 
-  ChessBoard copyWithMove(ChessMove move) {
+  ChessGame copyWithMove(ChessMove move) {
     final newBoard = copy();
 
     move.updateTiles(newBoard._tiles);

@@ -1,4 +1,4 @@
-import 'package:chess/ui/chess_board_widget.dart';
+import 'package:chess/ui/chess_game_widget.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -13,7 +13,7 @@ class MainApp extends StatelessWidget {
     return const MaterialApp(
       home: Scaffold(
         body: Center(
-          child: ChessBoardWidget(),
+          child: ChessGameWidget(),
         ),
       ),
     );

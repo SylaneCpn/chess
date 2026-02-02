@@ -1,4 +1,4 @@
-import 'package:chess/logic/chess_board.dart';
+import 'package:chess/logic/chess_game.dart';
 import 'package:chess/logic/chess_move.dart';
 import 'package:chess/logic/side_color.dart';
 import 'package:chess/logic/tile_coordinate.dart';
@@ -12,8 +12,8 @@ sealed class Piece {
   const Piece({required this.pieceColor});
 
   Widget asWidget() => SvgPicture.asset(assetImagePath);
-  List<ChessMove> moves(TileCoordinate piecePosition, ChessBoard board);
-  List<ChessMove> legalMoves(TileCoordinate piecePosition, ChessBoard board) {
+  List<ChessMove> moves(TileCoordinate piecePosition, ChessGame board);
+  List<ChessMove> legalMoves(TileCoordinate piecePosition, ChessGame board) {
     return moves(piecePosition, board).where((m) {
       // See if the move leads to a check
       final boardWithMove = board.copyWithMove(m);
@@ -43,7 +43,7 @@ class Pawn extends Piece {
   }
 
   @override
-  List<ChessMove> moves(TileCoordinate piecePosition, ChessBoard board) {
+  List<ChessMove> moves(TileCoordinate piecePosition, ChessGame board) {
     final positions = <ChessMove>[];
     // Tile in front
     final frontTile = switch (pieceColor) {
@@ -141,7 +141,7 @@ class Rook extends Piece {
   }
 
   @override
-  List<ChessMove> moves(TileCoordinate piecePosition, ChessBoard board) {
+  List<ChessMove> moves(TileCoordinate piecePosition, ChessGame board) {
     final positions = <ChessMove>[];
     // Positions over column on right
     // In the worst case, the piece is on the left of the board
@@ -239,7 +239,7 @@ class Knight extends Piece {
   }
 
   @override
-  List<ChessMove> moves(TileCoordinate piecePosition, ChessBoard board) {
+  List<ChessMove> moves(TileCoordinate piecePosition, ChessGame board) {
     final positions = <ChessMove>[];
 
     // Top Right
@@ -334,7 +334,7 @@ class Bishop extends Piece {
   }
 
   @override
-  List<ChessMove> moves(TileCoordinate piecePosition, ChessBoard board) {
+  List<ChessMove> moves(TileCoordinate piecePosition, ChessGame board) {
     final positions = <ChessMove>[];
     // Positions over top right diagonal
     // In the worst case, the piece is on the bottom left of the board
@@ -432,7 +432,7 @@ class Queen extends Piece {
   }
 
   @override
-  List<ChessMove> moves(TileCoordinate piecePosition, ChessBoard board) {
+  List<ChessMove> moves(TileCoordinate piecePosition, ChessGame board) {
     final positions = <ChessMove>[];
 
     // Rooklike positions
@@ -651,7 +651,7 @@ class King extends Piece {
   }
 
   @override
-  List<ChessMove> moves(TileCoordinate piecePosition, ChessBoard board) {
+  List<ChessMove> moves(TileCoordinate piecePosition, ChessGame board) {
     final positions = <ChessMove>[];
     for (int i = -1; i <= 1; i++) {
       for (int j = -1; j <= 1; j++) {
