@@ -32,7 +32,7 @@ class ChessGame {
     return ChessGame._(
       tiles: tiles,
       history: history,
-      playingSide: _playingSide,
+      playingSide: playingSide,
     );
   }
 

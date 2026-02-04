@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 class ChessBoardWidget extends StatelessWidget {
   final SideColor orientationColor;
   final void Function(int tappedIndex)? onTapCallback;
+  final void Function(int panIndex)? onPanStartCallback;
+  final void Function(DragUpdateDetails)? onPanUpdateCallback;
+  final void Function(DragEndDetails)? onPanEndCallback;
   final Iterable<Piece?> tiles;
   final List<int>? hiddenTilesIndexes;
   final List<int>? lightedUpTilesIndexes;
@@ -20,6 +23,7 @@ class ChessBoardWidget extends StatelessWidget {
     this.lightedUpTilesIndexes,
     required this.selectedTileIndex,
     this.lastTilesIndexes,
+    this.onPanStartCallback, this.onPanUpdateCallback, this.onPanEndCallback,
   });
 
   @override
@@ -30,13 +34,16 @@ class ChessBoardWidget extends StatelessWidget {
       physics: NeverScrollableScrollPhysics(),
       children: tiles.indexed.map((ie) {
         return GestureDetector(
+          onPanStart: (_) => onPanStartCallback?.call(ie.$1),
           onTap: () => onTapCallback?.call(ie.$1),
+          onPanUpdate: onPanUpdateCallback ,
+          onPanEnd: onPanEndCallback,
           child: ChessTileWidget(
             tileIndex: ie.$1,
             hidePiece: hiddenTilesIndexes?.contains(ie.$1) ?? false,
             isSelected: selectedTileIndex == ie.$1,
             isLightedUp: lightedUpTilesIndexes?.contains(ie.$1) ?? false,
-            isLastMove: lastTilesIndexes?.contains(ie.$1) ?? false ,
+            isLastMove: lastTilesIndexes?.contains(ie.$1) ?? false,
             piece: ie.$2,
           ),
         );
