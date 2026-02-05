@@ -22,6 +22,8 @@ sealed class Piece {
       return !boardWithMove.isCheck(pieceColor);
     }).toList();
   }
+
+  bool isEqual(Piece other);
 }
 
 class Pawn extends Piece {
@@ -127,6 +129,11 @@ class Pawn extends Piece {
     }
     return positions;
   }
+  
+  @override
+  bool isEqual(Piece other) =>
+    other is Pawn && pieceColor == other.pieceColor;
+  
 }
 
 class Rook extends Piece {
@@ -225,6 +232,10 @@ class Rook extends Piece {
 
     return positions;
   }
+
+  @override
+  bool isEqual(Piece other) =>
+    other is Rook && pieceColor == other.pieceColor;
 }
 
 class Knight extends Piece {
@@ -320,6 +331,10 @@ class Knight extends Piece {
 
     return positions;
   }
+
+  @override
+  bool isEqual(Piece other) =>
+    other is Knight && pieceColor == other.pieceColor;
 }
 
 class Bishop extends Piece {
@@ -418,6 +433,10 @@ class Bishop extends Piece {
 
     return positions;
   }
+
+  @override
+  bool isEqual(Piece other) =>
+    other is Bishop && pieceColor == other.pieceColor;
 }
 
 class Queen extends Piece {
@@ -601,6 +620,10 @@ class Queen extends Piece {
 
     return positions;
   }
+
+  @override
+  bool isEqual(Piece other) =>
+    other is Queen && pieceColor == other.pieceColor;
 }
 
 class King extends Piece {
@@ -700,4 +723,8 @@ class King extends Piece {
 
     return positions;
   }
+
+  @override
+  bool isEqual(Piece other) =>
+    other is King && pieceColor == other.pieceColor;
 }

@@ -34,6 +34,14 @@ class GameOverScreen extends StatelessWidget{
         ],
       ),
 
+      .drawByRepetition => Column(
+        spacing: 12.0,
+        children: [
+          Text("Draw"),
+          Text("by Repetition")
+        ],
+      ),
+
       .insufficientMaterial =>Column(
         spacing: 12.0,
         children: [

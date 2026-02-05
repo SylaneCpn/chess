@@ -49,11 +49,7 @@ class EnPassant extends ChessMove {
     tiles[newPosition.toChessTileIndex()] = piece;
 
     // Remove the captured piece
-    final capturePiecePosition = TileCoordinate(
-      column: newPosition.column,
-      row: oldPosition.row,
-    );
-    tiles[capturePiecePosition.toChessTileIndex()] = null;
+    tiles[capturedPawnTile().toChessTileIndex()] = null;
   }
 
   @override
@@ -61,6 +57,11 @@ class EnPassant extends ChessMove {
       other is EnPassant &&
       oldPosition == other.oldPosition &&
       newPosition == other.newPosition;
+
+  TileCoordinate capturedPawnTile() => TileCoordinate(
+      column: newPosition.column,
+      row: oldPosition.row,
+    );
 }
 
 

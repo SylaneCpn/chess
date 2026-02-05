@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:chess/logic/chess_game.dart';
 import 'package:chess/logic/chess_move.dart';
 import 'package:chess/logic/game_status.dart';
+import 'package:chess/logic/chess_event.dart';
 import 'package:chess/logic/piece.dart';
 import 'package:chess/ui/drag_state.dart';
+import 'package:chess/ui/pieces_eaten_widget.dart';
 import 'package:chess/ui/position.dart';
 import 'package:chess/logic/side_color.dart';
 import 'package:chess/logic/tile_coordinate.dart';
@@ -10,6 +14,7 @@ import 'package:chess/ui/chess_board_widget.dart';
 import 'package:chess/ui/game_over_screen.dart';
 import 'package:chess/ui/promote_wiget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
 
 class ChessGameWidget extends StatefulWidget {
   const ChessGameWidget({super.key});
@@ -21,6 +26,8 @@ class ChessGameWidget extends StatefulWidget {
 class _ChessGameWidgetState extends State<ChessGameWidget>
     with TickerProviderStateMixin {
   final ChessGame chessBoard = .new();
+  final List<Piece> whiteEaten = [];
+  final List<Piece> blackEaten = [];
   SideColor orientationColor = .white;
   bool autoFlip = false;
   int? selectedTileIndex;
@@ -33,9 +40,39 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
   );
   double _animationValue = 0.0;
 
+  AudioSource? captureSoundSource;
+  AudioSource? moveSoundSource;
+  AudioSource? castlingSoundSource;
+  AudioSource? moveCheckSoundSource;
+  AudioSource? promoteSoundSource;
+
+  static const String captureSoundAsset = 'assets/sounds/capture.mp3';
+  static const String moveSoundAsset = 'assets/sounds/move-self.mp3';
+  static const String castlingSoundAsset = 'assets/sounds/castle.mp3';
+  static const String promoteSoundAsset = 'assets/sounds/promote.mp3';
+  static const String moveCheckSoundAsset = 'assets/sounds/move-check.mp3';
+
+  void _soLoudInit() async {
+      await SoLoud.instance.init();
+      final [capture, move, castling, promote, check] = await Future.wait([
+        SoLoud.instance.loadAsset(captureSoundAsset),
+        SoLoud.instance.loadAsset(moveSoundAsset),
+        SoLoud.instance.loadAsset(castlingSoundAsset),
+        SoLoud.instance.loadAsset(promoteSoundAsset),
+        SoLoud.instance.loadAsset(moveCheckSoundAsset),
+      ]);
+      captureSoundSource = capture;
+      moveSoundSource = move;
+      castlingSoundSource = castling;
+      promoteSoundSource = promote;
+      moveCheckSoundSource = check;
+
+  }
+
   @override
   void dispose() {
     _animController.dispose();
+    SoLoud.instance.deinit();
     super.dispose();
   }
 
@@ -46,6 +83,7 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
         _animationValue = _animController.value;
       });
     });
+    _soLoudInit();
     super.initState();
   }
 
@@ -88,15 +126,24 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
           },
         ),
       );
+       _playSound(.promote);
     }
-
+   
     setState(() {});
   }
+
+  Piece? _eatenPiece(ChessMove move) => switch (move) {
+    EnPassant ep => chessBoard.getTile(ep.capturedPawnTile()),
+    _ => chessBoard.getTile(move.newPosition),
+  };
 
   void resetGame() {
     setState(() {
       chessBoard.resetBoard();
       orientationColor = .white;
+      selectedTileIndex = null;
+      blackEaten.clear();
+      whiteEaten.clear();
     });
   }
 
@@ -119,11 +166,38 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
     }
   }
 
-  void playWithAnimation(ChessMove move) async  {
-      //Sets the destination index to the one clicked
-      destinationIndex = move.newPosition.toChessTileIndex();
-      dragState = .validDragDrop;
+  Future<void> _playSound(ChessEvent event) async {
+    switch (event) {
+      case .capture:
+        captureSoundSource ??= await SoLoud.instance.loadAsset(
+          captureSoundAsset,
+        );
+        SoLoud.instance.play(captureSoundSource!);
+      case .move:
+        moveSoundSource ??= await SoLoud.instance.loadAsset(moveSoundAsset);
+        SoLoud.instance.play(moveSoundSource!);
+      case .castling:
+        castlingSoundSource ??= await SoLoud.instance.loadAsset(
+          castlingSoundAsset,
+        );
+        SoLoud.instance.play(castlingSoundSource!);
+      case ChessEvent.promote:
+        promoteSoundSource ??= await SoLoud.instance.loadAsset(
+          promoteSoundAsset,
+        );
+        SoLoud.instance.play(promoteSoundSource!);
+      case ChessEvent.moveCheck:
+        moveCheckSoundSource ??= await SoLoud.instance.loadAsset(
+          moveCheckSoundAsset,
+        );
+        SoLoud.instance.play(moveCheckSoundSource!);
+    }
+  }
 
+  void playWithAnimation(ChessMove move) async {
+    //Sets the destination index to the one clicked
+    destinationIndex = move.newPosition.toChessTileIndex();
+    dragState = .validDragDrop;
 
     // Play the animation
     await _animController.forward();
@@ -139,7 +213,23 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
 
     _animController.reset();
 
+    final eatenPiece = _eatenPiece(move);
+    if (eatenPiece != null) {
+      final _ = switch (chessBoard.playingSide.other()) {
+        .black => blackEaten.add(eatenPiece),
+        .white => whiteEaten.add(eatenPiece),
+      };
+    }
+
     chessBoard.applyMove(move);
+    final event = eatenPiece != null
+        ? ChessEvent.capture
+        : move is Castling
+        ? ChessEvent.castling
+        : chessBoard.isCheck(chessBoard.playingSide)
+        ? ChessEvent.moveCheck
+        : ChessEvent.move;
+    await _playSound(event);
 
     // Refresh the screen before promoting
     setState(() {});
@@ -182,19 +272,26 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
     dragOffset.add(Position(bottom: -details.delta.dy, left: details.delta.dx));
   });
 
-  int? _hoverTileIndex(List<ChessMove>? legalMoves , Position hoverPosition , BoxConstraints boardSize) {
-
+  int? _hoverTileIndex(
+    List<ChessMove>? legalMoves,
+    Position hoverPosition,
+    BoxConstraints boardSize,
+  ) {
     final height = boardSize.maxHeight;
     final width = boardSize.maxWidth;
 
     final hTileSize = width / 8;
     final vTileSize = height / 8;
 
-    final legalTilesIndex = legalMoves?.map((lm) => lm.newPosition.toChessTileIndex());
+    final legalTilesIndex = legalMoves?.map(
+      (lm) => lm.newPosition.toChessTileIndex(),
+    );
     final retIndex = legalTilesIndex?.where((lti) {
       final tilePosition = _calculateTilePosition(boardSize, lti);
-      final isInTileV = (tilePosition.bottom - hoverPosition.bottom).abs() <= vTileSize / 2;
-      final isInTileH = (tilePosition.left - hoverPosition.left).abs() <= hTileSize / 2 ;
+      final isInTileV =
+          (tilePosition.bottom - hoverPosition.bottom).abs() <= vTileSize / 2;
+      final isInTileH =
+          (tilePosition.left - hoverPosition.left).abs() <= hTileSize / 2;
 
       return isInTileH && isInTileV;
     }).firstOrNull;
@@ -202,28 +299,35 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
     return retIndex;
   }
 
-  void _onDragEndCallback({required List<ChessMove>? legalMoves , required Position hoverPosition , required BoxConstraints boardSize}) async  {
-    final hoverTileIndex = _hoverTileIndex(legalMoves, hoverPosition, boardSize);
+  void _onDragEndCallback({
+    required List<ChessMove>? legalMoves,
+    required Position hoverPosition,
+    required BoxConstraints boardSize,
+  }) async {
+    final hoverTileIndex = _hoverTileIndex(
+      legalMoves,
+      hoverPosition,
+      boardSize,
+    );
     //Play the return to base tile animation
-    if (hoverTileIndex == null ) {
+    if (hoverTileIndex == null) {
       dragState = .invalidDragDrop;
       // play the animation
       await _animController.forward();
-      //Reset 
+      //Reset
       setState(() {
         _animationValue = 0.0;
-      dragOffset.reset();
-      dragState = .untouched;
+        dragOffset.reset();
+        dragState = .untouched;
       });
       _animController.reset();
-    }
-
-    else {
-      final move = legalMoves!.where((lm) => lm.newPosition.toChessTileIndex() == hoverTileIndex).first;
+    } else {
+      final move = legalMoves!
+          .where((lm) => lm.newPosition.toChessTileIndex() == hoverTileIndex)
+          .first;
       playWithAnimation(move);
     }
   }
-  
 
   List<ChessMove>? _legalMovesForSelectedIndex() {
     if (selectedTileIndex == null) return null;
@@ -384,7 +488,11 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
                           onPanStartCallback: (index) => _setSelected(index),
                           onPanUpdateCallback: dragUpdateCallback,
 
-                          onPanEndCallback: (_) => _onDragEndCallback(legalMoves: legalMoves , hoverPosition: Position(bottom: bottom, left: left) , boardSize: constraints),
+                          onPanEndCallback: (_) => _onDragEndCallback(
+                            legalMoves: legalMoves,
+                            hoverPosition: Position(bottom: bottom, left: left),
+                            boardSize: constraints,
+                          ),
                           hiddenTilesIndexes: selectedTileIndex != null
                               ? [selectedTileIndex!]
                               : null,
@@ -402,7 +510,14 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
                             height: constraints.maxHeight / 8,
                             width: constraints.maxWidth / 8,
                             child: GestureDetector(
-                              onPanEnd: (_) => _onDragEndCallback(legalMoves: legalMoves , hoverPosition: Position(bottom: bottom, left: left) , boardSize: constraints),
+                              onPanEnd: (_) => _onDragEndCallback(
+                                legalMoves: legalMoves,
+                                hoverPosition: Position(
+                                  bottom: bottom,
+                                  left: left,
+                                ),
+                                boardSize: constraints,
+                              ),
                               onPanUpdate: dragUpdateCallback,
                               onTap: () => _setSelected(selectedTileIndex!),
                               child:
@@ -431,6 +546,42 @@ class _ChessGameWidgetState extends State<ChessGameWidget>
               Text("to play."),
             ],
           ),
+        ),
+
+        Builder(
+          builder: (context) {
+            final screenW = MediaQuery.widthOf(context);
+            final rowWidth = screenW / 4;
+            return Row(
+              mainAxisAlignment: .spaceEvenly,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SizedBox(
+                    height: rowWidth / 4,
+                    width: screenW / 4,
+                    child: PiecesEatenWidget(
+                      color: .white,
+                      pieces: whiteEaten,
+                      spacing: 15.0,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SizedBox(
+                    height: rowWidth / 4,
+                    width: screenW / 4,
+                    child: PiecesEatenWidget(
+                      color: .black,
+                      pieces: blackEaten,
+                      spacing: 15.0,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );

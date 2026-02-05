@@ -15,6 +15,8 @@ Let you want to play chess with your sibling, your friend or your cat and you do
 - Smart game state checking (knows checkmate , stalemate and when there is not enough material to win).
 - Moves assistance (shows the legal moves available for a given piece)
 - Board flipping
+- Drag and drop support 
+- Cool sounds on play
 
 ### What is missing 
 
@@ -26,6 +28,8 @@ Let you want to play chess with your sibling, your friend or your cat and you do
 ## Assets
 
 The piece assets are not mine they have been taken from [greenchess.net](https://greenchess.net/info.php?item=downloads).
+
+The sound assets have been taken from [chess.com](https://www.chess.com/forum/view/general/chessboard-sound-files).
 
 
 ## Getting Started

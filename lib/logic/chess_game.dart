@@ -131,10 +131,18 @@ class ChessGame {
     return hasBlackInsufficientMaterial && hasWhiteInsufficientMaterial;
   }
 
+  bool hasRepeatedPosition(int count) {
+    final previousTiles = _history.map((he) => he.lastTiles);
+    return previousTiles.where((pt) => pt.isEqual(_tiles)).length >= count;
+  }
+
   bool applyMove(ChessMove move) {
     // Move isn't legal , we can't make it;
     // Or it not right side playing
-    if (!isMoveLegal(move) || getTile(move.oldPosition)?.pieceColor != _playingSide) return false;
+    if (!isMoveLegal(move) ||
+        getTile(move.oldPosition)?.pieceColor != _playingSide) {
+      return false;
+    }
     move.updateTiles(_tiles);
     // Update history
     _history.add(ChessHistoryElement(lastMove: move, lastTiles: tiles));
@@ -157,10 +165,9 @@ class ChessGame {
       return .staleMate;
     } else if (hasInsufficientMaterial()) {
       return .insufficientMaterial;
+    } else if (hasRepeatedPosition(3)) {
+      return .drawByRepetition;
     }
-
-    //TODO IMPLEMENT DRAW BY REPETITION
-
     return .stillPlaying;
   }
 
@@ -270,5 +277,24 @@ class ChessGame {
 
     // King
     _setTile(blackKingInitPosition, const King(pieceColor: .black));
+  }
+}
+
+extension ChessTileEqual on List<Piece?> {
+  bool isEqual(List<Piece?> other) {
+    if (length != other.length) {
+      return false;
+    }
+    return Iterable.generate(length, (i) => (this[i], other[i])).every((e) {
+      if ((e.$1 == null) && (e.$2 == null)) {
+        return true;
+      }
+
+      if ((e.$1 != null) && (e.$2 != null)) {
+        return e.$1!.isEqual(e.$2!);
+      }
+
+      return false;
+    });
   }
 }
