@@ -80,7 +80,7 @@ class Castling extends ChessMove {
     tiles[newPosition.toChessTileIndex()] = piece;
 
     // Pop the rook
-    // "g" is the kind side casteling column tile
+    // "g" is the king side castling column tile
     final rookTile = TileCoordinate(column: newPosition.column == "g" ? "h" : "a", row: oldPosition.row);
     final rook = tiles[rookTile.toChessTileIndex()];
     tiles[rookTile.toChessTileIndex()] = null;
